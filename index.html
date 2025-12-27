@@ -27,18 +27,13 @@
             box-sizing: border-box;
         }
 
-        body {
-            margin: 0;
-            padding: 16px;
-            min-height: 100vh;
-            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-            color: var(--text);
-            background:
-                radial-gradient(900px 520px at 15% 5%, rgba(255, 45, 85, .20), transparent 60%),
-                radial-gradient(820px 520px at 80% 20%, rgba(139, 92, 255, .14), transparent 55%),
-                radial-gradient(900px 700px at 40% 120%, rgba(0, 229, 255, .08), transparent 60%),
-                linear-gradient(180deg, var(--bg0), var(--bg1));
-            overflow-x: hidden;
+       
+
+        body{
+          margin:0;
+          min-height:100vh;
+          display:flex;
+          flex-direction:column;
         }
 
         body::before{
@@ -424,21 +419,26 @@
             }
         }
         
+       .main{
+          width:100%;
+          flex: 1 0 auto;
+        }
+        
         .siteFooter{
-          margin-top: 14px;
+          margin-top: auto;     /* ini kuncinya */
+          margin-bottom: 10px;
           padding: 10px 12px;
           border-radius: 16px;
-          position: sticky;
-          bottom: 10px;
         }
+        
         .footerInner{
           display:flex;
           gap:10px;
           align-items:center;
           justify-content:center;
           flex-wrap:wrap;
+          font-size:12px;
           color: rgba(255,255,255,.82);
-          font-size: 12px;
         }
         .footerInner .sep{ color: rgba(255,255,255,.35); }
 
@@ -446,8 +446,9 @@
 </head>
 
 <body>
+    
     <div class="gridBg"></div>
-
+<main class="wrap main">
     <div class="wrap">
         <div class="top">
             <h1>Wallet Scanning </h1>
@@ -529,14 +530,16 @@
             <pre id="raw">{}</pre>
         </details>
     </div>
-    <footer class="siteFooter glass">
-      <div class="footerInner">
-        <span class="mono">© <span id="yy"></span></span>
-        <span class="sep">•</span>
-        <span>Copyright by <b>ZeecDEv</b></span>
-      </div>
-    </footer>
-    <script>
+  <footer class="siteFooter glass">
+    <div class="footerInner">
+      <span class="mono">© <span id="yy"></span></span>
+      <span class="sep">•</span>
+      <span>Copyright by <b>ZeecDEv</b></span>
+    </div>
+  </footer>
+  <script>
+          
+         document.getElementById("yy").textContent = new Date().getFullYear();
 
         const HELIUS_API_KEY_DEFAULT = "98e4a328-4c19-4799-8d81-de84e2c55f9d";
         document.addEventListener("DOMContentLoaded", () => {
