@@ -1,882 +1,791 @@
 <!doctype html>
 <html lang="id">
-
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Wallet Scanning Solana</title>
-    <style>
-        :root {
-            --bg0: #05050a;
-            --bg1: #0a0712;
-            --glass: rgba(14, 10, 18, .55);
-            --border: rgba(255, 70, 120, .22);
-            --red: #ff2d55;
-            --vio: #8b5cff;
-            --cyan: #00e5ff;
-            --text: #f3f4ff;
-            --muted: #a6a8c2;
-            --ok: #32ff9a;
-            --err: #ff3b30;
-            --shadow: 0 18px 70px rgba(0, 0, 0, .62);
-            --glow: 0 0 0 1px rgba(255, 45, 85, .22), 0 0 40px rgba(255, 45, 85, .14);
-            --radius: 18px;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Wallet Scanning Solana</title>
+  <style>
+    :root{
+      --bg0:#05050a; --bg1:#0a0712;
+      --glass:rgba(14,10,18,.55);
+      --border:rgba(255,70,120,.22);
+      --red:#ff2d55; --vio:#8b5cff; --cyan:#00e5ff;
+      --text:#f3f4ff; --muted:#a6a8c2;
+      --ok:#32ff9a; --err:#ff3b30;
+      --shadow:0 18px 70px rgba(0,0,0,.62);
+      --glow:0 0 0 1px rgba(255,45,85,.22), 0 0 40px rgba(255,45,85,.14);
+      --radius:18px;
+    }
+    *{ box-sizing:border-box; }
 
-        * {
-            box-sizing: border-box;
-        }
+    /* Sticky footer layout */
+    html, body { height: 100%; }
+    body{
+      margin:0;
+      padding:16px;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
 
-       body {
-            margin: 0;
-            padding: 16px;
-            min-height: 100vh;
-            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-            color: var(--text);
-            background:
-                radial-gradient(900px 520px at 15% 5%, rgba(255, 45, 85, .20), transparent 60%),
-                radial-gradient(820px 520px at 80% 20%, rgba(139, 92, 255, .14), transparent 55%),
-                radial-gradient(900px 700px at 40% 120%, rgba(0, 229, 255, .08), transparent 60%),
-                linear-gradient(180deg, var(--bg0), var(--bg1));
-            overflow-x: hidden;
-        }
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(900px 520px at 15% 5%, rgba(255,45,85,.20), transparent 60%),
+        radial-gradient(820px 520px at 80% 20%, rgba(139,92,255,.14), transparent 55%),
+        radial-gradient(900px 700px at 40% 120%, rgba(0,229,255,.08), transparent 60%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
+    }
 
-        body::before{
-          content:"";
-          position: fixed;
-          inset: 0;
-          z-index: -1;
-          pointer-events: none;
-        
-          background-image: url("https://static.vecteezy.com/system/resources/previews/024/093/328/original/solana-sol-glass-crypto-coin-3d-illustration-free-png.png");
-          background-repeat: no-repeat;
-          background-position: 85% 35%;
-          background-size: min(520px, 70vw);
-          opacity: 0.16;
-        
-          /* efek glow futuristik */
-          filter: drop-shadow(0 0 28px rgba(255,45,85,.25))
-                  drop-shadow(0 0 22px rgba(0,229,255,.18));
-        }
-        
-        body::before{
-          /* ...yang tadi... */
-          animation: floatCoin 8s ease-in-out infinite;
-        }
-        
-        @keyframes floatCoin{
-          0%,100%{ transform: translate3d(0,0,0) rotate(-2deg); }
-          50%{ transform: translate3d(-10px, 12px, 0) rotate(2deg); }
-        }
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      z-index:-1;
+      pointer-events:none;
 
+      background-image:url("https://static.vecteezy.com/system/resources/previews/024/093/328/original/solana-sol-glass-crypto-coin-3d-illustration-free-png.png");
+      background-repeat:no-repeat;
+      background-position:85% 35%;
+      background-size:min(520px, 70vw);
+      opacity:.16;
+      filter:drop-shadow(0 0 28px rgba(255,45,85,.25))
+             drop-shadow(0 0 22px rgba(0,229,255,.18));
+      animation:floatCoin 8s ease-in-out infinite;
+    }
+    @keyframes floatCoin{
+      0%,100%{ transform: translate3d(0,0,0) rotate(-2deg); }
+      50%{ transform: translate3d(-10px, 12px, 0) rotate(2deg); }
+    }
 
+    /* animated grid */
+    .gridBg{
+      position:fixed; inset:-20%;
+      background:
+        linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+      background-size:48px 48px;
+      transform:perspective(900px) rotateX(64deg) translateY(-120px);
+      opacity:.18;
+      filter:blur(.2px);
+      animation:drift 14s linear infinite;
+      pointer-events:none;
+      z-index:-2;
+    }
+    @keyframes drift{
+      from{ background-position:0 0, 0 0; }
+      to{ background-position:0 480px, 480px 0; }
+    }
 
-        /* animated grid */
-        .gridBg {
-            position: fixed;
-            inset: -20%;
-            background:
-                linear-gradient(rgba(255, 255, 255, .06) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, .06) 1px, transparent 1px);
-            background-size: 48px 48px;
-            transform: perspective(900px) rotateX(64deg) translateY(-120px);
-            opacity: .18;
-            filter: blur(.2px);
-            animation: drift 14s linear infinite;
-            pointer-events: none;
-            z-index: -2;
-        }
+    .wrap{ max-width:1220px; margin:0 auto; width:100%; }
+    .main{ width:100%; flex: 1 0 auto; } /* dorong footer ke bawah */
 
-        @keyframes drift {
-            from {
-                background-position: 0 0, 0 0;
-            }
+    .top{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px; flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+    h1{ margin:0; font-size:20px; letter-spacing:.25px; }
 
-            to {
-                background-position: 0 480px, 480px 0;
-            }
-        }
+    .badge{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:9px 12px;
+      border-radius:999px;
+      background:rgba(255,45,85,.10);
+      border:1px solid rgba(255,45,85,.22);
+      box-shadow:var(--glow);
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .dot{
+      width:9px; height:9px; border-radius:50%;
+      background:radial-gradient(circle at 30% 30%, #fff, var(--red));
+      box-shadow:0 0 18px rgba(255,45,85,.65);
+      animation:pulse 1.6s infinite ease-in-out;
+    }
+    @keyframes pulse{
+      0%,100%{ transform:scale(1); opacity:.95 }
+      50%{ transform:scale(.72); opacity:.6 }
+    }
 
-        .wrap {
-            max-width: 1220px;
-            margin: 0 auto;
-        }
+    .glass{
+      background:var(--glass);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow), var(--glow);
+      backdrop-filter:blur(14px);
+      -webkit-backdrop-filter:blur(14px);
+      overflow:hidden;
+      position:relative;
+    }
+    .scanline{
+      position:absolute; inset:0;
+      background:linear-gradient(transparent, rgba(0,229,255,.06), transparent);
+      transform:translateY(-120%);
+      animation:scan 5.2s ease-in-out infinite;
+      pointer-events:none;
+    }
+    @keyframes scan{
+      0%{ transform:translateY(-120%); opacity:0; }
+      15%{ opacity:.6; }
+      55%{ opacity:.35; }
+      100%{ transform:translateY(120%); opacity:0; }
+    }
 
-        .top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 12px;
-        }
+    .panel{ padding:14px; }
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(12, 1fr);
+      gap:12px;
+      align-items:end;
+    }
+    .field{ grid-column:span 3; min-width:0; }
+    .field.wide{ grid-column:span 6; }
+    .field.small{ grid-column:span 2; }
 
-        h1 {
-            margin: 0;
-            font-size: 20px;
-            letter-spacing: .25px;
-        }
+    label{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      margin:0 0 6px;
+    }
+    input, button{
+      width:100%;
+      padding:10px 12px;
+      font-size:14px;
+      border-radius:12px;
+      outline:none;
+    }
+    input{
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      color:var(--text);
+      box-shadow:inset 0 0 0 1px rgba(0,0,0,.20);
+    }
+    button{
+      cursor:pointer;
+      border:1px solid rgba(255,45,85,.35);
+      background:linear-gradient(135deg, rgba(255,45,85,.95), rgba(139,92,255,.75));
+      color:#08060e;
+      font-weight:900;
+      letter-spacing:.2px;
+      box-shadow:0 16px 40px rgba(255,45,85,.18);
+      transition:transform .12s ease, filter .12s ease;
+    }
+    button:hover{ transform:translateY(-1px); filter:brightness(1.02); }
+    button:disabled{ opacity:.6; cursor:not-allowed; transform:none; }
 
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 9px 12px;
-            border-radius: 999px;
-            background: rgba(255, 45, 85, .10);
-            border: 1px solid rgba(255, 45, 85, .22);
-            box-shadow: var(--glow);
-            font-size: 12px;
-            white-space: nowrap;
-        }
+    .status{
+      margin-top:10px;
+      font-size:13px;
+      color:var(--muted);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .status .ok{ color:var(--ok); font-weight:900; }
+    .status .err{ color:var(--err); font-weight:900; }
+    .bar{
+      flex:1 1 320px;
+      height:10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+      overflow:hidden;
+    }
+    .bar>div{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg, rgba(0,229,255,.8), rgba(255,45,85,.85));
+      box-shadow:0 0 20px rgba(0,229,255,.25);
+      transition:width .18s ease;
+    }
 
-        .dot {
-            width: 9px;
-            height: 9px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #fff, var(--red));
-            box-shadow: 0 0 18px rgba(255, 45, 85, .65);
-            animation: pulse 1.6s infinite ease-in-out;
-        }
+    .tableWrap{
+      margin-top:12px;
+      overflow:auto;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.03);
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:1100px;
+    }
+    thead th{
+      position:sticky;
+      top:0;
+      background:rgba(255,45,85,.08);
+      border-bottom:1px solid rgba(255,45,85,.18);
+      color:rgba(255,255,255,.88);
+      text-align:left;
+      padding:10px;
+      font-size:12px;
+      letter-spacing:.35px;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+    tbody td{
+      padding:10px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      vertical-align:top;
+      font-size:13px;
+      color:rgba(255,255,255,.90);
+      white-space:nowrap;
+    }
+    tbody tr:hover{ background:rgba(255,45,85,.06); }
+    .mono{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+    .num{ font-variant-numeric:tabular-nums; }
+    .pos{ color:var(--ok); font-weight:900; }
+    .neg{ color:var(--err); font-weight:900; }
 
-        @keyframes pulse {
+    details{ margin-top:12px; }
+    summary{ cursor:pointer; color:var(--muted); }
+    pre{
+      margin-top:10px;
+      padding:12px;
+      background:rgba(0,0,0,.45);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:14px;
+      color:rgba(255,255,255,.86);
+      overflow:auto;
+      max-height:360px;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
 
-            0%,
-            100% {
-                transform: scale(1);
-                opacity: .95
-            }
+    /* Footer */
+    .siteFooter{
+      margin-top:auto;
+      margin-bottom:10px;
+      padding:10px 12px;
+      border-radius:16px;
+    }
+    .footerInner{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:center;
+      flex-wrap:wrap;
+      font-size:12px;
+      color:rgba(255,255,255,.82);
+    }
+    .footerInner .sep{ color:rgba(255,255,255,.35); }
 
-            50% {
-                transform: scale(.72);
-                opacity: .6
-            }
-        }
-
-        .glass {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow), var(--glow);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-            overflow: hidden;
-            position: relative;
-        }
-
-        .scanline {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(transparent, rgba(0, 229, 255, .06), transparent);
-            transform: translateY(-120%);
-            animation: scan 5.2s ease-in-out infinite;
-            pointer-events: none;
-        }
-
-        @keyframes scan {
-            0% {
-                transform: translateY(-120%);
-                opacity: .0;
-            }
-
-            15% {
-                opacity: .6;
-            }
-
-            55% {
-                opacity: .35;
-            }
-
-            100% {
-                transform: translateY(120%);
-                opacity: .0;
-            }
-        }
-
-        .panel {
-            padding: 14px;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(12, 1fr);
-            gap: 12px;
-            align-items: end;
-        }
-
-        .field {
-            grid-column: span 3;
-            min-width: 0;
-        }
-
-        .field.wide {
-            grid-column: span 6;
-        }
-
-        .field.small {
-            grid-column: span 2;
-        }
-
-        label {
-            display: block;
-            font-size: 12px;
-            color: var(--muted);
-            margin: 0 0 6px;
-        }
-
-        input,
-        button {
-            width: 100%;
-            padding: 10px 12px;
-            font-size: 14px;
-            border-radius: 12px;
-            outline: none;
-        }
-
-        input {
-            background: rgba(255, 255, 255, .06);
-            border: 1px solid rgba(255, 255, 255, .12);
-            color: var(--text);
-            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .20);
-        }
-
-        button {
-            cursor: pointer;
-            border: 1px solid rgba(255, 45, 85, .35);
-            background:
-                linear-gradient(135deg, rgba(255, 45, 85, .95), rgba(139, 92, 255, .75));
-            color: #08060e;
-            font-weight: 900;
-            letter-spacing: .2px;
-            box-shadow: 0 16px 40px rgba(255, 45, 85, .18);
-            transition: transform .12s ease, filter .12s ease;
-        }
-
-        button:hover {
-            transform: translateY(-1px);
-            filter: brightness(1.02);
-        }
-
-        button:disabled {
-            opacity: .6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .hint {
-            color: var(--muted);
-            font-size: 12px;
-            margin-top: 6px;
-        }
-
-        .status {
-            margin-top: 10px;
-            font-size: 13px;
-            color: var(--muted);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .status .ok {
-            color: var(--ok);
-            font-weight: 900;
-        }
-
-        .status .err {
-            color: var(--err);
-            font-weight: 900;
-        }
-
-        .bar {
-            flex: 1 1 320px;
-            height: 10px;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, .08);
-            border: 1px solid rgba(255, 255, 255, .10);
-            overflow: hidden;
-        }
-
-        .bar>div {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, rgba(0, 229, 255, .8), rgba(255, 45, 85, .85));
-            box-shadow: 0 0 20px rgba(0, 229, 255, .25);
-            transition: width .18s ease;
-        }
-
-        .tableWrap {
-            margin-top: 12px;
-            overflow: auto;
-            border-radius: 14px;
-            border: 1px solid rgba(255, 255, 255, .08);
-            background: rgba(255, 255, 255, .03);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 1100px;
-        }
-
-        thead th {
-            position: sticky;
-            top: 0;
-            background: rgba(255, 45, 85, .08);
-            border-bottom: 1px solid rgba(255, 45, 85, .18);
-            color: rgba(255, 255, 255, .88);
-            text-align: left;
-            padding: 10px;
-            font-size: 12px;
-            letter-spacing: .35px;
-            text-transform: uppercase;
-            white-space: nowrap;
-        }
-
-        tbody td {
-            padding: 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, .06);
-            vertical-align: top;
-            font-size: 13px;
-            color: rgba(255, 255, 255, .90);
-            white-space: nowrap;
-        }
-
-        tbody tr:hover {
-            background: rgba(255, 45, 85, .06);
-        }
-
-        .mono {
-            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        }
-
-        .num {
-            font-variant-numeric: tabular-nums;
-        }
-
-        .pos {
-            color: var(--ok);
-            font-weight: 900;
-        }
-
-        .neg {
-            color: var(--err);
-            font-weight: 900;
-        }
-
-        details {
-            margin-top: 12px;
-        }
-
-        summary {
-            cursor: pointer;
-            color: var(--muted);
-        }
-
-        pre {
-            margin-top: 10px;
-            padding: 12px;
-            background: rgba(0, 0, 0, .45);
-            border: 1px solid rgba(255, 255, 255, .08);
-            border-radius: 14px;
-            color: rgba(255, 255, 255, .86);
-            overflow: auto;
-            max-height: 360px;
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-
-        @media (max-width: 980px) {
-            .field {
-                grid-column: span 6;
-            }
-
-            .field.small {
-                grid-column: span 3;
-            }
-
-            .field.wide {
-                grid-column: span 12;
-            }
-
-            table {
-                min-width: 1020px;
-            }
-        }
-
-        @media (max-width: 560px) {
-            body {
-                padding: 12px;
-            }
-
-            .field {
-                grid-column: span 12;
-            }
-
-            .field.small {
-                grid-column: span 6;
-            }
-
-            table {
-                min-width: 920px;
-            }
-        }
-        
-       .main{
-          width:100%;
-          flex: 1 0 auto;
-        }
-        
-        .siteFooter{
-          margin-top: auto;     /* ini kuncinya */
-          margin-bottom: 10px;
-          padding: 10px 12px;
-          border-radius: 16px;
-        }
-        
-        .footerInner{
-          display:flex;
-          gap:10px;
-          align-items:center;
-          justify-content:center;
-          flex-wrap:wrap;
-          font-size:12px;
-          color: rgba(255,255,255,.82);
-        }
-        .footerInner .sep{ color: rgba(255,255,255,.35); }
-
-    </style>
+    @media (max-width:980px){
+      .field{ grid-column:span 6; }
+      .field.small{ grid-column:span 3; }
+      .field.wide{ grid-column:span 12; }
+      table{ min-width:1020px; }
+    }
+    @media (max-width:560px){
+      body{ padding:12px; }
+      .field{ grid-column:span 12; }
+      .field.small{ grid-column:span 6; }
+      table{ min-width:920px; }
+    }
+  </style>
 </head>
 
 <body>
-    
-    <div class="gridBg"></div>
-    <div class="wrap">
-        <div class="top">
-            <h1>Wallet Scanning </h1>
-            <div class="badge"><span class="dot"></span><span>DAS holdings + RPC proxy + PnL (USDC)</span></div>
-        </div>
+  <div class="gridBg"></div>
 
-        <div class="glass panel">
-            <div class="scanline"></div>
-
-            <div class="grid">
-                <div class="field wide">
-                    <label>Helius API Key (DAS)</label>
-                    <input id="apiKey" value="" type="password" autocomplete="off" />
-                </div>
-
-
-                <div class="field wide">
-                    <label>Wallet</label>
-                    <input id="owner" value=""  placeholder="Contract Address"/>
-                </div>
-
-                <div class="field small">
-                    <label>Holdings limit</label>
-                    <input id="limitAssets" type="number" min="1" max="1000" value="200" />
-                </div>
-
-                <div class="field small">
-                    <label>Signatures</label>
-                    <input id="limitTx" type="number" min="10" max="200" value="80" />
-                </div>
-
-                <div class="field small">
-                    <label>Tx details</label>
-                    <input id="maxDetails" type="number" min="5" max="80" value="25" />
-                </div>
-
-                <div class="field small">
-                    <label>Min USD</label>
-                    <input id="minUsd" type="number" value="1" />
-                </div>
-
-                <div class="field small">
-                    <label>&nbsp;</label>
-                    <button id="btnLoad">Analyze</button>
-                </div>
-            </div>
-
-            <div class="status">
-                <div id="statusText"></div>
-                <div class="bar" aria-label="progress">
-                    <div id="barFill"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="tableWrap" id="tableWrap" style="display:none;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Token</th>
-                        <th>Mint</th>
-                        <th class="num">Amount</th>
-                        <th class="num">Entry</th>
-                        <th class="num">Current</th>
-                        <th class="num">Holdings USD</th>
-                        <th class="num">Sold USD</th>
-                        <th class="num">PnL USD</th>
-                        <th class="num">PnL %</th>
-                        <th>Notes</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody"></tbody>
-            </table>
-        </div>
-
-        <details>
-            <summary>Raw JSON (debug)</summary>
-            <pre id="raw">{}</pre>
-        </details>
-        </br>
-        <footer class="siteFooter glass">
-        <div class="footerInner">
-          <span class="mono">© <span id="yy"></span></span>
-          <span class="sep">•</span>
-          <span>Copyright by <b>ZeecDev</b></span>
-        </div>
-      </footer>
+  <main class="wrap main">
+    <div class="top">
+      <h1>Wallet Scanning</h1>
+      <div class="badge"><span class="dot"></span><span>DAS holdings + RPC proxy + PnL (USDC)</span></div>
     </div>
-    <script>
-          
-         document.getElementById("yy").textContent = new Date().getFullYear();
 
-        const HELIUS_API_KEY_DEFAULT = "98e4a328-4c19-4799-8d81-de84e2c55f9d";
-        document.addEventListener("DOMContentLoaded", () => {
-            const apiInput = document.getElementById("apiKey");
-            if (apiInput && !apiInput.value) apiInput.value = HELIUS_API_KEY_DEFAULT;
-        });
+    <div class="glass panel">
+      <div class="scanline"></div>
 
-        // IMPORTANT:
-        // - Solana RPC calls go through /api/rpc (Vercel proxy) to avoid browser CORS/403.
-        // - Helius DAS still uses Helius RPC with api-key.
-        const RPC_PROXY = "/api/rpc";
+      <div class="grid">
+        <div class="field wide">
+          <label>Helius API Key (DAS)</label>
+          <input id="apiKey" value="" type="password" autocomplete="off" />
+        </div>
 
+        <div class="field wide">
+          <label>Wallet</label>
+          <input id="owner" value="" placeholder="Contract Address" />
+        </div>
 
+        <div class="field small">
+          <label>Holdings limit</label>
+          <input id="limitAssets" type="number" min="1" max="1000" value="200" />
+        </div>
 
-        // USDC mint (mainnet) used for USD PnL [web:300]
-        const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+        <div class="field small">
+          <label>Signatures</label>
+          <input id="limitTx" type="number" min="10" max="200" value="80" />
+        </div>
 
-        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-        const el = (id) => document.getElementById(id);
+        <div class="field small">
+          <label>Tx details</label>
+          <input id="maxDetails" type="number" min="5" max="80" value="25" />
+        </div>
 
-        function setProgress(pct) { el("barFill").style.width = `${Math.max(0, Math.min(100, pct))}%`; }
-        function setStatus(msg, kind = "muted") {
-            const cls = kind === "err" ? "err" : (kind === "ok" ? "ok" : "");
-            el("statusText").innerHTML = cls ? `<span class="${cls}">${msg}</span>` : msg;
+        <div class="field small">
+          <label>Min USD</label>
+          <input id="minUsd" type="number" value="1" />
+        </div>
+
+        <div class="field small">
+          <label>Auto refresh (sec)</label>
+          <input id="refreshSec" type="number" min="0" max="300" value="15" />
+        </div>
+
+        <div class="field small">
+          <label>&nbsp;</label>
+          <button id="btnLoad">Analyze</button>
+        </div>
+      </div>
+
+      <div class="status">
+        <div id="statusText"></div>
+        <div class="bar" aria-label="progress">
+          <div id="barFill"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tableWrap" id="tableWrap" style="display:none;">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Token</th>
+            <th>Mint</th>
+            <th class="num">Amount</th>
+            <th class="num">Entry</th>
+            <th class="num">Current</th>
+            <th class="num">Holdings USD</th>
+            <th class="num">Sold USD</th>
+            <th class="num">PnL USD</th>
+            <th class="num">PnL %</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <details>
+      <summary>Raw JSON (debug)</summary>
+      <pre id="raw">{}</pre>
+    </details>
+  </main>
+
+  <footer class="siteFooter glass">
+    <div class="footerInner">
+      <span class="mono">© <span id="yy"></span></span>
+      <span class="sep">•</span>
+      <span>Copyright by <b>ZeecDev</b></span>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("yy").textContent = new Date().getFullYear();
+
+    const HELIUS_API_KEY_DEFAULT = "98e4a328-4c19-4799-8d81-de84e2c55f9d";
+    document.addEventListener("DOMContentLoaded", () => {
+      const apiInput = document.getElementById("apiKey");
+      if (apiInput && !apiInput.value) apiInput.value = HELIUS_API_KEY_DEFAULT;
+    });
+
+    // Solana RPC calls go through proxy to avoid browser CORS/403
+    const RPC_PROXY = "/api/rpc";
+
+    // USDC mint (mainnet)
+    const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+    const el = (id) => document.getElementById(id);
+
+    function setProgress(pct){ el("barFill").style.width = `${Math.max(0, Math.min(100, pct))}%`; }
+    function setStatus(msg, kind="muted"){
+      const cls = kind==="err" ? "err" : (kind==="ok" ? "ok" : "");
+      el("statusText").innerHTML = cls ? `<span class="${cls}">${msg}</span>` : msg;
+    }
+
+    // ===== Helius DAS (RPC) =====
+    function heliusRpcUrl(apiKey){
+      return `https://mainnet.helius-rpc.com/?api-key=${apiKey}`;
+    }
+    async function heliusRpcCall(apiKey, method, params){
+      const res = await fetch(heliusRpcUrl(apiKey), {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({ jsonrpc:"2.0", id:"helius", method, params })
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message || JSON.stringify(json.error));
+      return json.result;
+    }
+    async function fetchFungibleHoldings(apiKey, ownerAddress, limit){
+      return await heliusRpcCall(apiKey, "searchAssets", {
+        ownerAddress,
+        tokenType:"fungible",
+        page:1,
+        limit,
+        displayOptions:{ showNativeBalance:true }
+      });
+    }
+    function pickItems(result){
+      if (result && Array.isArray(result.items)) return result.items;
+      if (result && result.assets && Array.isArray(result.assets.items)) return result.assets.items;
+      return [];
+    }
+    function normalizeFungiblesFromDas(result){
+      const items = pickItems(result);
+      return items.map(it => {
+        const info = it.token_info || {};
+        const mint = it.id || info.mint || info.address || "";
+        const raw = Number(info.balance ?? info.amount ?? 0);
+        const decimals = Number(info.decimals ?? 0);
+        const dasPrice = Number(info.price_info?.price_per_token ?? 0);
+        return {
+          mint,
+          symbol: info.symbol || it.content?.metadata?.symbol || "UNKNOWN",
+          name: info.name || it.content?.metadata?.name || "Unknown",
+          decimals,
+          rawAmount: raw,
+          dasPrice
+        };
+      }).filter(t => t.mint && Number.isFinite(t.rawAmount) && t.rawAmount > 0);
+    }
+
+    // ===== Solana RPC via proxy =====
+    async function rpcRaw(method, params){
+      const res = await fetch(RPC_PROXY, {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({ jsonrpc:"2.0", id:method, method, params })
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message || JSON.stringify(json.error));
+      return json.result;
+    }
+
+    // getSignaturesForAddress: newest first [web:262]
+    async function getSignaturesForAddress(wallet, limit=80){
+      const cfg = { limit: Math.max(1, Math.min(1000, Number(limit) || 80)), commitment:"confirmed" };
+      return await rpcRaw("getSignaturesForAddress", [wallet, cfg]);
+    }
+
+    // getTransaction [web:278]
+    async function getTransaction(signature){
+      return await rpcRaw("getTransaction", [
+        signature,
+        { encoding:"jsonParsed", commitment:"confirmed", maxSupportedTransactionVersion:0 }
+      ]);
+    }
+
+    // ===== PnL logic (USDC-only swaps) =====
+    function uiAmountFromTokenBalance(tb){
+      const ui = tb?.uiTokenAmount;
+      if (!ui) return 0;
+      const s = ui.uiAmountString ?? null;
+      if (s !== null && s !== undefined){
+        const v = Number(s);
+        return Number.isFinite(v) ? v : 0;
+      }
+      const raw = Number(ui.amount ?? 0);
+      const dec = Number(ui.decimals ?? 0);
+      if (!Number.isFinite(raw)) return 0;
+      return dec ? raw / Math.pow(10, dec) : raw;
+    }
+
+    function computeWalletTokenDeltas(tx, wallet){
+      const pre = Array.isArray(tx?.meta?.preTokenBalances) ? tx.meta.preTokenBalances : [];
+      const post = Array.isArray(tx?.meta?.postTokenBalances) ? tx.meta.postTokenBalances : [];
+      const key = (b) => `${b.accountIndex}|${b.mint}|${b.owner || ""}`;
+
+      const preMap = new Map();
+      for (const b of pre) preMap.set(key(b), b);
+
+      const postMap = new Map();
+      for (const b of post) postMap.set(key(b), b);
+
+      const keys = new Set([...preMap.keys(), ...postMap.keys()]);
+      const out = new Map(); // mint -> delta ui
+
+      for (const k of keys){
+        const a = preMap.get(k);
+        const b = postMap.get(k);
+        const owner = (b?.owner || a?.owner || "");
+        if (owner !== wallet) continue;
+
+        const mint = b?.mint || a?.mint;
+        if (!mint) continue;
+
+        const preUi = a ? uiAmountFromTokenBalance(a) : 0;
+        const postUi = b ? uiAmountFromTokenBalance(b) : 0;
+        const d = postUi - preUi;
+        if (!Number.isFinite(d) || d === 0) continue;
+
+        out.set(mint, (out.get(mint) || 0) + d);
+      }
+      return out;
+    }
+
+    function ensureLedger(map, mint){
+      if (!map.has(mint)) map.set(mint, { buyUsd:0, buyQty:0, sellUsd:0, notes:new Set() });
+      return map.get(mint);
+    }
+
+    function buildLedgerFromTxs(txs, wallet){
+      const ledger = new Map();
+
+      for (const tx of txs){
+        if (!tx?.meta || tx?.meta?.err) continue;
+
+        const d = computeWalletTokenDeltas(tx, wallet);
+        const dUsdc = d.get(USDC_MINT) || 0;
+        d.delete(USDC_MINT);
+
+        const entries = [...d.entries()];
+        if (entries.length !== 1) continue;
+
+        const [mint, dTok] = entries[0];
+        if (!mint || !Number.isFinite(dTok) || dTok === 0) continue;
+        if (!Number.isFinite(dUsdc) || dUsdc === 0) continue;
+
+        // BUY: token +, USDC -
+        if (dTok > 0 && dUsdc < 0){
+          const e = ensureLedger(ledger, mint);
+          e.buyUsd += (-dUsdc);
+          e.buyQty += dTok;
+          e.notes.add("USDC-buy");
+          continue;
+        }
+        // SELL: token -, USDC +
+        if (dTok < 0 && dUsdc > 0){
+          const e = ensureLedger(ledger, mint);
+          e.sellUsd += dUsdc;
+          e.notes.add("USDC-sell");
+          continue;
+        }
+      }
+
+      for (const [mint, v] of ledger.entries()){
+        v.notes = [...v.notes].join(",");
+        ledger.set(mint, v);
+      }
+      return ledger;
+    }
+
+    // ===== Render =====
+    function fmtUsd(x){
+      if (!Number.isFinite(x)) return "—";
+      return "$" + x.toLocaleString("en-US", { maximumFractionDigits:2 });
+    }
+    function fmtPrice(x){
+      if (!Number.isFinite(x) || x === 0) return "—";
+      return "$" + x.toFixed(10);
+    }
+    function fmtMint(m){
+      if (!m) return "";
+      return m.slice(0,4) + "…" + m.slice(-4);
+    }
+
+    function render(tokens, ledger, minUsd){
+      const tbody = el("tbody");
+      tbody.innerHTML = "";
+
+      const rows = tokens.map(t => {
+        const amountUi = t.decimals ? (t.rawAmount / Math.pow(10, t.decimals)) : t.rawAmount;
+        const price = Number(t.dasPrice || 0);
+        const holdingsUsd = amountUi * price;
+
+        const l = ledger.get(t.mint) || { buyUsd:0, buyQty:0, sellUsd:0, notes:"" };
+        const entry = (l.buyQty > 0) ? (l.buyUsd / l.buyQty) : 0;
+        const pnlUsd = (holdingsUsd + l.sellUsd) - l.buyUsd;
+        const pnlPct = (l.buyUsd > 0) ? (pnlUsd / l.buyUsd) * 100 : NaN;
+
+        return { ...t, amountUi, price, holdingsUsd, entry, soldUsd:l.sellUsd, pnlUsd, pnlPct, notes:l.notes || "" };
+      })
+      .filter(r => Number.isFinite(r.holdingsUsd) && r.holdingsUsd > 0 && ((minUsd <= 0) ? true : (r.holdingsUsd >= minUsd)))
+      .sort((a,b) => (b.holdingsUsd || 0) - (a.holdingsUsd || 0));
+
+      if (!rows.length){
+        el("tableWrap").style.display = "none";
+        setStatus("Tidak ada token yang tampil. Coba set Min USD=0.", "err");
+        return;
+      }
+
+      rows.forEach((r, idx) => {
+        const cls = Number.isFinite(r.pnlUsd) ? (r.pnlUsd >= 0 ? "pos" : "neg") : "";
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td>
+            <div><b>${r.symbol}</b></div>
+            <div style="color:var(--muted);font-size:12px;margin-top:4px;white-space:normal;">${r.name}</div>
+          </td>
+          <td class="mono" title="${r.mint}">${fmtMint(r.mint)}</td>
+          <td class="num">${r.amountUi.toLocaleString("en-US", { maximumFractionDigits:10 })}</td>
+          <td class="num">${r.entry ? fmtPrice(r.entry) : "—"}</td>
+          <td class="num">${r.price ? fmtPrice(r.price) : "—"}</td>
+          <td class="num">${fmtUsd(r.holdingsUsd)}</td>
+          <td class="num">${fmtUsd(r.soldUsd)}</td>
+          <td class="num ${cls}">${fmtUsd(r.pnlUsd)}</td>
+          <td class="num ${cls}">${Number.isFinite(r.pnlPct) ? r.pnlPct.toFixed(2) + "%" : "—"}</td>
+          <td>${r.notes || ""}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      el("tableWrap").style.display = "";
+    }
+
+    // ===== Auto refresh incremental =====
+    let AUTO_TIMER = null;
+    let PROCESSED_SIGS = new Set();
+    let LAST_WALLET = "";
+    let LAST_TOKENS = null;
+    let LAST_LEDGER = new Map();
+
+    function stopAuto(){
+      if (AUTO_TIMER){
+        clearInterval(AUTO_TIMER); // stop setInterval [web:479]
+        AUTO_TIMER = null;
+      }
+    }
+
+    async function updatePnlOnly(wallet, maxDetails){
+      const sigs = await getSignaturesForAddress(wallet, 50); // newest first [web:262]
+      const newest = sigs.map(s => s.signature).filter(Boolean);
+
+      const todo = [];
+      for (const s of newest){
+        if (!PROCESSED_SIGS.has(s)) todo.push(s);
+        if (todo.length >= maxDetails) break;
+      }
+      if (!todo.length) return { newTx: 0 };
+
+      const txs = [];
+      for (let i = 0; i < todo.length; i++){
+        try{
+          const tx = await getTransaction(todo[i]); // tx detail [web:278]
+          if (tx) txs.push(tx);
+          PROCESSED_SIGS.add(todo[i]);
+        }catch(e){}
+        await sleep(80);
+      }
+
+      const partial = buildLedgerFromTxs(txs, wallet);
+      for (const [mint, v] of partial.entries()){
+        const cur = LAST_LEDGER.get(mint) || { buyUsd:0, buyQty:0, sellUsd:0, notes:"" };
+        cur.buyUsd += v.buyUsd || 0;
+        cur.buyQty += v.buyQty || 0;
+        cur.sellUsd += v.sellUsd || 0;
+        cur.notes = [cur.notes, v.notes].filter(Boolean).join(",");
+        LAST_LEDGER.set(mint, cur);
+      }
+
+      return { newTx: txs.length };
+    }
+
+    async function analyze(){
+      const btn = el("btnLoad");
+      btn.disabled = true;
+      stopAuto();
+      setProgress(0);
+
+      const apiKey = el("apiKey").value.trim();
+      const wallet = el("owner").value.trim();
+      const limitAssets = Number(el("limitAssets").value || 200);
+      const limitTx = Math.min(200, Math.max(10, Number(el("limitTx").value || 80)));
+      const maxDetails = Math.min(80, Math.max(5, Number(el("maxDetails").value || 25)));
+      const minUsd = Number(el("minUsd").value || 0);
+      const refreshSec = Number(el("refreshSec").value || 0);
+
+      if (!apiKey){ setStatus("API key Helius kosong.", "err"); btn.disabled = false; return; }
+      if (!wallet){ setStatus("Wallet kosong.", "err"); btn.disabled = false; return; }
+
+      if (wallet !== LAST_WALLET){
+        PROCESSED_SIGS = new Set();
+        LAST_LEDGER = new Map();
+        LAST_WALLET = wallet;
+      }
+
+      try{
+        setStatus("1/4 Loading holdings (DAS)...", "muted");
+        setProgress(8);
+        const das = await fetchFungibleHoldings(apiKey, wallet, limitAssets);
+        const tokens = normalizeFungiblesFromDas(das);
+        setProgress(22);
+
+        setStatus("2/4 Loading signatures (RPC)...", "muted");
+        const sigs = await getSignaturesForAddress(wallet, limitTx); // [web:262]
+        setProgress(35);
+
+        const n = Math.min(maxDetails, sigs.length);
+        setStatus(`3/4 Fetching tx details: 0/${n}...`, "muted");
+
+        const txs = [];
+        for (let i = 0; i < n; i++){
+          const sig = sigs[i]?.signature;
+          if (!sig) continue;
+
+          // tandai sudah diproses untuk incremental refresh
+          PROCESSED_SIGS.add(sig);
+
+          try{
+            const tx = await getTransaction(sig); // [web:278]
+            if (tx) txs.push(tx);
+          }catch(e){}
+          setStatus(`3/4 Fetching tx details: ${Math.min(i + 1, n)}/${n}...`, "muted");
+          setProgress(35 + Math.round(((i + 1) / n) * 45));
+          await sleep(90);
         }
 
-        // ===== Helius DAS (RPC) =====
-        function heliusRpcUrl(apiKey) {
-            return `https://mainnet.helius-rpc.com/?api-key=${apiKey}`;
+        setStatus("4/4 Building PnL (USDC-only)...", "muted");
+        setProgress(88);
+
+        const ledger = buildLedgerFromTxs(txs, wallet);
+        LAST_TOKENS = tokens;
+        LAST_LEDGER = ledger;
+
+        el("raw").textContent = JSON.stringify({
+          sigCount: sigs.length,
+          fetchedTxCount: txs.length,
+          autoRefreshSec: refreshSec,
+          ledgerSample: [...ledger.entries()].slice(0, 8)
+        }, null, 2);
+
+        setStatus(`OK: token=${tokens.length}, sig=${sigs.length}, tx=${txs.length}. PnL=USDC-only`, "ok");
+        setProgress(100);
+        render(LAST_TOKENS, LAST_LEDGER, minUsd);
+
+        // Auto refresh (polling) pakai setInterval [web:478]
+        if (refreshSec > 0){
+          AUTO_TIMER = setInterval(async () => {
+            try{
+              const r = await updatePnlOnly(wallet, Math.min(10, maxDetails));
+              if (r.newTx > 0 && LAST_TOKENS){
+                setStatus(`Auto update: +${r.newTx} tx (PnL refreshed)`, "ok");
+                render(LAST_TOKENS, LAST_LEDGER, Number(el("minUsd").value || 0));
+              }
+            }catch(e){}
+          }, refreshSec * 1000);
         }
 
-        async function heliusRpcCall(apiKey, method, params) {
-            const res = await fetch(heliusRpcUrl(apiKey), {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ jsonrpc: "2.0", id: "helius", method, params })
-            });
-            const json = await res.json();
-            if (json.error) throw new Error(json.error.message || JSON.stringify(json.error));
-            return json.result;
-        }
+      }catch(e){
+        setStatus(`Error: ${e.message}`, "err");
+        setProgress(0);
+      }finally{
+        btn.disabled = false;
+      }
+    }
 
-        async function fetchFungibleHoldings(apiKey, ownerAddress, limit) {
-            return await heliusRpcCall(apiKey, "searchAssets", {
-                ownerAddress,
-                tokenType: "fungible",
-                page: 1,
-                limit,
-                displayOptions: { showNativeBalance: true }
-            });
-        }
-
-        function pickItems(result) {
-            if (result && Array.isArray(result.items)) return result.items;
-            if (result && result.assets && Array.isArray(result.assets.items)) return result.assets.items;
-            return [];
-        }
-
-        function normalizeFungiblesFromDas(result) {
-            const items = pickItems(result);
-            return items.map(it => {
-                const info = it.token_info || {};
-                const mint = it.id || info.mint || info.address || "";
-                const raw = Number(info.balance ?? info.amount ?? 0);
-                const decimals = Number(info.decimals ?? 0);
-                const dasPrice = Number(info.price_info?.price_per_token ?? 0);
-                return {
-                    mint,
-                    symbol: info.symbol || it.content?.metadata?.symbol || "UNKNOWN",
-                    name: info.name || it.content?.metadata?.name || "Unknown",
-                    decimals,
-                    rawAmount: raw,
-                    dasPrice
-                };
-            }).filter(t => t.mint && Number.isFinite(t.rawAmount) && t.rawAmount > 0);
-        }
-
-        // ===== Solana RPC via Vercel proxy =====
-        async function rpcRaw(method, params) {
-            const res = await fetch(RPC_PROXY, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ jsonrpc: "2.0", id: method, method, params })
-            });
-            const json = await res.json();
-            if (json.error) throw new Error(json.error.message || JSON.stringify(json.error));
-            return json.result;
-        }
-
-        // getSignaturesForAddress [web:262]
-        async function getSignaturesForAddress(wallet, limit = 80) {
-            const cfg = { limit: Math.max(1, Math.min(1000, Number(limit) || 80)), commitment: "confirmed" };
-            return await rpcRaw("getSignaturesForAddress", [wallet, cfg]);
-        }
-
-        // getTransaction [web:278]
-        async function getTransaction(signature) {
-            return await rpcRaw("getTransaction", [
-                signature,
-                { encoding: "jsonParsed", commitment: "confirmed", maxSupportedTransactionVersion: 0 }
-            ]);
-        }
-
-        // ===== PnL logic (USDC-only swaps) =====
-        function uiAmountFromTokenBalance(tb) {
-            const ui = tb?.uiTokenAmount;
-            if (!ui) return 0;
-            const s = ui.uiAmountString ?? null;
-            if (s !== null && s !== undefined) {
-                const v = Number(s);
-                return Number.isFinite(v) ? v : 0;
-            }
-            const raw = Number(ui.amount ?? 0);
-            const dec = Number(ui.decimals ?? 0);
-            if (!Number.isFinite(raw)) return 0;
-            return dec ? raw / Math.pow(10, dec) : raw;
-        }
-
-        function computeWalletTokenDeltas(tx, wallet) {
-            const pre = Array.isArray(tx?.meta?.preTokenBalances) ? tx.meta.preTokenBalances : [];
-            const post = Array.isArray(tx?.meta?.postTokenBalances) ? tx.meta.postTokenBalances : [];
-            const key = (b) => `${b.accountIndex}|${b.mint}|${b.owner || ""}`;
-
-            const preMap = new Map();
-            for (const b of pre) preMap.set(key(b), b);
-
-            const postMap = new Map();
-            for (const b of post) postMap.set(key(b), b);
-
-            const keys = new Set([...preMap.keys(), ...postMap.keys()]);
-            const out = new Map(); // mint -> delta ui
-
-            for (const k of keys) {
-                const a = preMap.get(k);
-                const b = postMap.get(k);
-                const owner = (b?.owner || a?.owner || "");
-                if (owner !== wallet) continue;
-
-                const mint = b?.mint || a?.mint;
-                if (!mint) continue;
-
-                const preUi = a ? uiAmountFromTokenBalance(a) : 0;
-                const postUi = b ? uiAmountFromTokenBalance(b) : 0;
-                const d = postUi - preUi;
-                if (!Number.isFinite(d) || d === 0) continue;
-
-                out.set(mint, (out.get(mint) || 0) + d);
-            }
-            return out;
-        }
-
-        function ensureLedger(map, mint) {
-            if (!map.has(mint)) map.set(mint, { buyUsd: 0, buyQty: 0, sellUsd: 0, notes: new Set() });
-            return map.get(mint);
-        }
-
-        // USDC-only PnL from deltas [web:300]
-        function buildLedgerFromTxs(txs, wallet) {
-            const ledger = new Map();
-
-            for (const tx of txs) {
-                if (!tx?.meta || tx?.meta?.err) continue;
-
-                const d = computeWalletTokenDeltas(tx, wallet);
-                const dUsdc = d.get(USDC_MINT) || 0;
-                d.delete(USDC_MINT);
-
-                const entries = [...d.entries()];
-                if (entries.length !== 1) continue; // skip multi-hop/complex
-
-                const [mint, dTok] = entries[0];
-                if (!mint || !Number.isFinite(dTok) || dTok === 0) continue;
-                if (!Number.isFinite(dUsdc) || dUsdc === 0) continue;
-
-                // BUY: token +, USDC -
-                if (dTok > 0 && dUsdc < 0) {
-                    const e = ensureLedger(ledger, mint);
-                    e.buyUsd += (-dUsdc);
-                    e.buyQty += dTok;
-                    e.notes.add("USDC-buy");
-                    continue;
-                }
-                // SELL: token -, USDC +
-                if (dTok < 0 && dUsdc > 0) {
-                    const e = ensureLedger(ledger, mint);
-                    e.sellUsd += dUsdc;
-                    e.notes.add("USDC-sell");
-                    continue;
-                }
-            }
-
-            for (const [mint, v] of ledger.entries()) {
-                v.notes = [...v.notes].join(",");
-                ledger.set(mint, v);
-            }
-            return ledger;
-        }
-
-        // ===== Render =====
-        function fmtUsd(x) {
-            if (!Number.isFinite(x)) return "—";
-            return "$" + x.toLocaleString("en-US", { maximumFractionDigits: 2 });
-        }
-        function fmtPrice(x) {
-            if (!Number.isFinite(x) || x === 0) return "—";
-            return "$" + x.toFixed(10);
-        }
-        function fmtMint(m) {
-            if (!m) return "";
-            return m.slice(0, 4) + "…" + m.slice(-4);
-        }
-
-        function render(tokens, ledger, minUsd) {
-            const tbody = el("tbody");
-            tbody.innerHTML = "";
-
-            const rows = tokens.map(t => {
-                const amountUi = t.decimals ? (t.rawAmount / Math.pow(10, t.decimals)) : t.rawAmount;
-                const price = Number(t.dasPrice || 0);
-                const holdingsUsd = amountUi * price;
-
-                const l = ledger.get(t.mint) || { buyUsd: 0, buyQty: 0, sellUsd: 0, notes: "" };
-                const entry = (l.buyQty > 0) ? (l.buyUsd / l.buyQty) : 0;
-                const pnlUsd = (holdingsUsd + l.sellUsd) - l.buyUsd;
-                const pnlPct = (l.buyUsd > 0) ? (pnlUsd / l.buyUsd) * 100 : NaN;
-
-                return { ...t, amountUi, price, holdingsUsd, entry, soldUsd: l.sellUsd, pnlUsd, pnlPct, notes: l.notes || "" };
-            })
-                // only show non-zero USD value
-                .filter(r => Number.isFinite(r.holdingsUsd) && r.holdingsUsd > 0 && ((minUsd <= 0) ? true : (r.holdingsUsd >= minUsd)))
-                .sort((a, b) => (b.holdingsUsd || 0) - (a.holdingsUsd || 0));
-
-            if (!rows.length) {
-                el("tableWrap").style.display = "none";
-                setStatus("Tidak ada token yang tampil. Coba set Min USD=0.", "err");
-                return;
-            }
-
-            rows.forEach((r, idx) => {
-                const cls = Number.isFinite(r.pnlUsd) ? (r.pnlUsd >= 0 ? "pos" : "neg") : "";
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-        <td>${idx + 1}</td>
-        <td><div><b>${r.symbol}</b></div><div style="color:var(--muted);font-size:12px;margin-top:4px;white-space:normal;">${r.name}</div></td>
-        <td class="mono" title="${r.mint}">${fmtMint(r.mint)}</td>
-        <td class="num">${r.amountUi.toLocaleString("en-US", { maximumFractionDigits: 10 })}</td>
-        <td class="num">${r.entry ? fmtPrice(r.entry) : "—"}</td>
-        <td class="num">${r.price ? fmtPrice(r.price) : "—"}</td>
-        <td class="num">${fmtUsd(r.holdingsUsd)}</td>
-        <td class="num">${fmtUsd(r.soldUsd)}</td>
-        <td class="num ${cls}">${fmtUsd(r.pnlUsd)}</td>
-        <td class="num ${cls}">${Number.isFinite(r.pnlPct) ? r.pnlPct.toFixed(2) + "%" : "—"}</td>
-        <td>${r.notes || ""}</td>
-      `;
-                tbody.appendChild(tr);
-            });
-
-            el("tableWrap").style.display = "";
-        }
-
-        async function analyze() {
-            const btn = el("btnLoad");
-            btn.disabled = true;
-            setProgress(0);
-
-            const apiKey = el("apiKey").value.trim();
-            const wallet = el("owner").value.trim();
-            const limitAssets = Number(el("limitAssets").value || 200);
-            const limitTx = Math.min(200, Math.max(10, Number(el("limitTx").value || 80)));
-            const maxDetails = Math.min(80, Math.max(5, Number(el("maxDetails").value || 25)));
-            const minUsd = Number(el("minUsd").value || 0);
-
-            if (!apiKey) { setStatus("API key Helius kosong.", "err"); btn.disabled = false; return; }
-            if (!wallet) { setStatus("Wallet kosong.", "err"); btn.disabled = false; return; }
-
-            try {
-                setStatus("1/4 Loading holdings (DAS)...", "muted");
-                setProgress(8);
-                const das = await fetchFungibleHoldings(apiKey, wallet, limitAssets);
-                const tokens = normalizeFungiblesFromDas(das);
-                setProgress(22);
-
-                setStatus("2/4 Loading signatures (RPC)...", "muted");
-                const sigs = await getSignaturesForAddress(wallet, limitTx);
-                setProgress(35);
-
-                const n = Math.min(maxDetails, sigs.length);
-                setStatus(`3/4 Fetching tx details: 0/${n}...`, "muted");
-
-                const txs = [];
-                for (let i = 0; i < n; i++) {
-                    const sig = sigs[i]?.signature;
-                    if (!sig) continue;
-                    try {
-                        const tx = await getTransaction(sig);
-                        if (tx) txs.push(tx);
-                    } catch (e) {
-                        // skip (rate limit / missing tx)
-                    }
-                    setStatus(`3/4 Fetching tx details: ${Math.min(i + 1, n)}/${n}...`, "muted");
-                    setProgress(35 + Math.round(((i + 1) / n) * 45));
-                    await sleep(90);
-                }
-
-                setStatus("4/4 Building PnL (USDC-only)...", "muted");
-                setProgress(88);
-                const ledger = buildLedgerFromTxs(txs, wallet);
-
-                el("raw").textContent = JSON.stringify({
-                    sigCount: sigs.length,
-                    fetchedTxCount: txs.length,
-                    ledgerSample: [...ledger.entries()].slice(0, 8),
-                    sampleSig: sigs?.[0]?.signature || null,
-                    sampleTx: txs?.[0] || null
-                }, null, 2);
-
-                setStatus(`OK: token=${tokens.length}, sig=${sigs.length}, tx=${txs.length}. PnL=USDC-only`, "ok");
-                setProgress(100);
-                render(tokens, ledger, minUsd);
-
-            } catch (e) {
-                setStatus(`Error: ${e.message}`, "err");
-                setProgress(0);
-            } finally {
-                btn.disabled = false;
-            }
-        }
-
-        // auto-load from localStorage (safe)
-        el("apiKey").value = localStorage.getItem("HELIUS_API_KEY") || "";
-        el("btnLoad").addEventListener("click", analyze);
-    </script>
+    // auto-load from localStorage (safe)
+    el("apiKey").value = localStorage.getItem("HELIUS_API_KEY") || "";
+    el("btnLoad").addEventListener("click", analyze);
+  </script>
 </body>
-
 </html>
