@@ -41,6 +41,36 @@
             overflow-x: hidden;
         }
 
+        body::before{
+          content:"";
+          position: fixed;
+          inset: 0;
+          z-index: -1;
+          pointer-events: none;
+        
+          background-image: url("https://static.vecteezy.com/system/resources/previews/024/093/328/original/solana-sol-glass-crypto-coin-3d-illustration-free-png.png");
+          background-repeat: no-repeat;
+          background-position: 85% 35%;
+          background-size: min(520px, 70vw);
+          opacity: 0.16;
+        
+          /* efek glow futuristik */
+          filter: drop-shadow(0 0 28px rgba(255,45,85,.25))
+                  drop-shadow(0 0 22px rgba(0,229,255,.18));
+        }
+        
+        body::before{
+          /* ...yang tadi... */
+          animation: floatCoin 8s ease-in-out infinite;
+        }
+        
+        @keyframes floatCoin{
+          0%,100%{ transform: translate3d(0,0,0) rotate(-2deg); }
+          50%{ transform: translate3d(-10px, 12px, 0) rotate(2deg); }
+        }
+
+
+
         /* animated grid */
         .gridBg {
             position: fixed;
@@ -54,7 +84,7 @@
             filter: blur(.2px);
             animation: drift 14s linear infinite;
             pointer-events: none;
-            z-index: -1;
+            z-index: -2;
         }
 
         @keyframes drift {
@@ -393,6 +423,25 @@
                 min-width: 920px;
             }
         }
+        
+        .siteFooter{
+          margin-top: 14px;
+          padding: 10px 12px;
+          border-radius: 16px;
+          position: sticky;
+          bottom: 10px;
+        }
+        .footerInner{
+          display:flex;
+          gap:10px;
+          align-items:center;
+          justify-content:center;
+          flex-wrap:wrap;
+          color: rgba(255,255,255,.82);
+          font-size: 12px;
+        }
+        .footerInner .sep{ color: rgba(255,255,255,.35); }
+
     </style>
 </head>
 
@@ -480,7 +529,13 @@
             <pre id="raw">{}</pre>
         </details>
     </div>
-
+    <footer class="siteFooter glass">
+      <div class="footerInner">
+        <span class="mono">© <span id="yy"></span></span>
+        <span class="sep">•</span>
+        <span>Copyright by <b>ZeecDEv</b></span>
+      </div>
+    </footer>
     <script>
 
         const HELIUS_API_KEY_DEFAULT = "98e4a328-4c19-4799-8d81-de84e2c55f9d";
