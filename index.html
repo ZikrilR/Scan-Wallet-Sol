@@ -558,23 +558,33 @@
   }
 
   function startAuto(wallet, refreshSec, maxDetails){
-    stopAuto();
-    if (!AUTO_ON) return;
-    if (!refreshSec || refreshSec <= 0) return;
+  stopAuto();
+  if (!AUTO_ON) return;
+  if (!refreshSec || refreshSec <= 0) return;
 
-    // setInterval executes repeatedly and returns an id [web:478]
-    AUTO_TIMER = setInterval(async () => {
-      try{
-        const r = await updatePnlOnly(wallet, Math.min(10, maxDetails));
-        if (r.newTx > 0 && LAST_TOKENS){
-          setStatus(`SYNC: +${r.newTx} tx • ledger updated`, "ok");
-          render(LAST_TOKENS, LAST_LEDGER, Number(el("minUsd").value || 0));
-        }
-      }catch(e){
-        // keep silent to avoid UI spam
+  AUTO_TIMER = setInterval(async () => {
+    try{
+      const apiKey = el("apiKey").value.trim();
+      const limitAssets = Number(el("limitAssets").value || 200);
+      const minUsd = Number(el("minUsd").value || 0);
+
+      // 1) refresh price/holdings (biar PnL USD ikut bergerak)
+      await refreshHoldingsOnly(apiKey, wallet, limitAssets);
+
+      // 2) refresh ledger tx baru (batasi kecil biar gak 429)
+      const r = await updatePnlOnly(wallet, Math.min(3, maxDetails));
+
+      // 3) render ulang WALAU newTx = 0 (price bisa berubah)
+      if (LAST_TOKENS){
+        setStatus(`AUTO SYNC: price refreshed • +${r.newTx} tx`, r.newTx > 0 ? "ok" : "muted");
+        render(LAST_TOKENS, LAST_LEDGER, minUsd);
       }
-    }, refreshSec * 1000);
-  }
+    }catch(e){
+      setStatus(`AUTO SYNC error: ${e.message}`, "err");
+    }
+  }, refreshSec * 1000);
+}
+
 
   // ============ Helius DAS ============
   function heliusRpcUrl(apiKey){
@@ -778,6 +788,11 @@
     }
 
     return { newTx: txs.length };
+  }
+
+  async function refreshHoldingsOnly(apiKey, wallet, limitAssets){
+    const das = await fetchFungibleHoldings(apiKey, wallet, limitAssets);
+    LAST_TOKENS = normalizeFungiblesFromDas(das);
   }
 
   // ============ Render ============
